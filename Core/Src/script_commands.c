@@ -1,5 +1,23 @@
 #include "main.h"
 
+enum Color {
+    black           = 0, 
+    blue            = 1, 
+    light_blue      = 2, 
+    green           = 3, 
+    light_green     = 4, 
+    cyan            = 5, 
+    light_cyan      = 6, 
+    red             = 7, 
+    light_red       = 8, 
+    magenta         = 9, 
+    light_magenta   = 10, 
+    brown           = 11, 
+    yellow          = 12, 
+    gray            = 13, 
+    white           = 14
+}
+
 void line(uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2, uint8_t color, uint8_t thickness)
 {
 
