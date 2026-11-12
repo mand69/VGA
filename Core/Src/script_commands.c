@@ -1,48 +1,72 @@
-#include "main.h"
-/*
-enum Color {
-    black           = 0, 
-    blue            = 1, 
-    light_blue      = 2, 
-    green           = 3, 
-    light_green     = 4, 
-    cyan            = 5, 
-    light_cyan      = 6, 
-    red             = 7, 
-    light_red       = 8, 
-    magenta         = 9, 
-    light_magenta   = 10, 
-    brown           = 11, 
-    yellow          = 12, 
-    gray            = 13, 
-    white           = 14
-}
+#include "stm32_ub_vga_screen.h"
 
-void line(uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2, uint8_t color, uint8_t thickness)
+
+int API_draw_text(int x_lup, int y_lup, int color, char *text, char *fontname, int fontsize, int fontstyle, int reserved) // fontsize:1 small, 2 big
 {
 
 }
 
 
-void rectangle(uint16_t x_lup, uint16_t y_lup, uint16_t x_distance, uint16_t y_distance, uint8_t color, uint8_t filled)
+int API_draw_line(int x_1, int y_1, int x_2, int y_2, int color, int weight, int reserved)
+{
+    int dx = abs((int)x_2 - (int)x_1);
+    int dy = abs((int)y_2 - (int)y_1);
+
+    int sx = (x_1 < x_2) ? 1 : -1;
+    int sy = (y_1 < y_2) ? 1 : -1;
+
+    int err = dx - dy;
+
+    while (1)
+    {
+        // Teken de pixel(s) rondom het huidige punt
+        int offset = weight / 2;
+
+        for (int i = -offset; i <= offset; i++)
+        {
+            for (int j = -offset; j <= offset; j++)
+            {
+                UB_VGA_SetPixel(x_1 + i, y_1 + j, color);
+            }
+        }
+
+        // Eindpunt bereikt?
+        if (x_1 == x_2 && y_1 == y_2)
+            break;
+
+        int e2 = 2 * err;
+
+        if (e2 > -dy)
+        {
+            err -= dy;
+            x_1 += sx;
+        }
+
+        if (e2 < dx)
+        {
+            err += dx;
+            y_1 += sy;
+        }
+    }
+}
+
+
+
+// int API_draw_rectangle(int x, int y, int width, int height, int color, int filled, int reserved, int reserved) // e.g.: weight, bordercolor
+// {
+
+// }
+
+
+
+int API_draw_bitmap(int x_lup, int y_lup, int bm_nr)
 {
 
 }
 
 
-void text(uint16_t nr, uint16_t x_lup, uint16_t y_lup, uint16_t text, uint8_t font, uint8_t font_size, uint8_t font_style)
-{
 
-}
-
-
-void bitmap(uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2, uint8_t color, uint8_t thickness)
-{
-
-}
-
-
-void clearscreen(uint16_t color)
+int API_clearscreen(int color)
 {
 
 }
@@ -52,27 +76,33 @@ void clearscreen(uint16_t color)
 /////////////////////////// BONUS COMMANDS ////////////////////////////
 ///////////////////////////////////////////////////////////////////////
 
-void wait(uint16_t msec)
+
+
+int API_wait(int msecs)
 {
 
 }
 
 
-void repeat(uint16_t amount, uint16_t repeats)
+
+int API_repeat_commands(int nr_previous_commands, int iterations, int reserved)
 {
 
 }
 
 
-void circle(uint16_t x, uint16_t y, uint16_t radius, uint16_t color)
+
+int API_draw_circle(int x, int y, int radius, int color, int reserved)
 {
 
 }
 
 
-void figure(uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2, uint16_t x3, uint16_t y3, uint16_t x4, uint16_t y4, uint16_t x5, uint16_t y5, uint8_t color)
+
+int API_draw_figure(int x_1, int y_1, int x_2, int y_2, int x_3, int y_3, int x_4, int y_4, int x_5, int y_5, int color, int reserved)
 {
 
 }
 
-*/
+
+
