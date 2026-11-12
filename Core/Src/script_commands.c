@@ -1,5 +1,5 @@
 #include "main.h"
-
+/*
 enum Color {
     black           = 0, 
     blue            = 1, 
@@ -74,3 +74,5 @@ void figure(uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2, uint16_t x3, uin
 {
 
 }
+
+*/

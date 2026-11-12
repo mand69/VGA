@@ -1,0 +1,19 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Debug STM32 (ST-Link)",
+      "type": "cortex-debug",
+      "request": "launch",
+      "servertype": "stlink",
+      "serverpath": "C:/ST/STM32CubeIDE_1.19.0/STM32CubeIDE/plugins/com.st.stm32cube.ide.mcu.externaltools.stlink-gdb-server.win32_2.2.200.202505060755/tools/bin/ST-LINK_gdbserver.exe",
+      "stm32cubeprogrammer": "C:/ST/STM32CubeIDE_1.19.0/STM32CubeIDE/plugins/com.st.stm32cube.ide.mcu.externaltools.cubeprogrammer.win32_2.2.200.202503041107/tools/bin",
+      "device": "STM32F407VG",
+      "interface": "swd",
+      "executable": "${workspaceFolder}/Debug/VGA.elf",
+      "cwd": "${workspaceFolder}",
+      "preLaunchTask": "Build STM32 Project",
+      "runToEntryPoint": "main"
+    }
+  ]
+}
