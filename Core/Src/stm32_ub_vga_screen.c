@@ -67,9 +67,11 @@ void UB_VGA_Screen_Init(void)
 }
 
 
-//--------------------------------------------------------------
-// fill the DMA RAM buffer with one color
-//--------------------------------------------------------------
+/**
+ * @brief Fill the DMA RAM buffer with one color
+ * 
+ * @param color 
+ */
 void UB_VGA_FillScreen(uint8_t color)
 {
   uint16_t xp,yp;
@@ -82,10 +84,14 @@ void UB_VGA_FillScreen(uint8_t color)
 }
 
 
-//--------------------------------------------------------------
-// put one Pixel on the screen with one color
-// Important : the last Pixel+1 from every line must be black (don't know why??)
-//--------------------------------------------------------------
+/**
+ * @brief Put one pixel on the screen with one color
+ * @note The last Pixel+1 from every line must be black (don't know why??)
+ * @param xp 
+ * @param yp 
+ * @param color 
+ * @return * void 
+ */
 void UB_VGA_SetPixel(uint16_t xp, uint16_t yp, uint8_t color)
 {
   if(xp>=VGA_DISPLAY_X) xp=0;
@@ -359,7 +365,7 @@ void TIM2_IRQHandler(void)
   // Test for DMA start
   if((VGA.hsync_cnt>=VGA_VSYNC_BILD_START) && (VGA.hsync_cnt<=VGA_VSYNC_BILD_STOP)) {
     // DMA2 init
-	DMA2_Stream5->CR=VGA.dma2_cr_reg;
+	  DMA2_Stream5->CR=VGA.dma2_cr_reg;
     // set address
     DMA2_Stream5->M0AR=VGA.start_adr;
     // Timer1 start
