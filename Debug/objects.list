@@ -1,5 +1,6 @@
 "./Core/Src/main.o"
 "./Core/Src/misc.o"
+"./Core/Src/script_commands.o"
 "./Core/Src/startup_stm32f4xx.o"
 "./Core/Src/stm32_ub_vga_screen.o"
 "./Core/Src/stm32f4xx_dma.o"
