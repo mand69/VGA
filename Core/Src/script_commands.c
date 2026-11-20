@@ -1,5 +1,7 @@
 #include "stm32_ub_vga_screen.h"
+#include "font_5x7.h"
 #include <stdlib.h>
+#include <string.h>
 
 #define X_MAX 320-1
 #define Y_MAX 240-1
@@ -11,10 +13,92 @@ enum ERR_STATES{
     ERR_INVALID_VALUE = 2
 };
 
-// int API_draw_text(int x_lup, int y_lup, int color, char *text, char *fontname, int fontsize, int fontstyle, int reserved) // fontsize:1 small, 2 big
-// {
+/**
+ * @brief  This function draws text using the 5x7 bitmap font.
+ *
+ * @param x_lup Left position of the text
+ * @param y_lup Top position of the text
+ * @param color Text color
+ * @param text Text to draw; lowercase is converted to uppercase
+ * @param fontname Font name (currently "5x7")
+ * @param fontsize 1 for normal size, 2 for double size
+ * @param fontstyle Reserved; 0 for normal style
+ * @param reserved Reserved parameter
+ * @return int error
+ */
+int API_draw_text(int x_lup, int y_lup, int color, char *text, char *fontname,
+                  int fontsize, int fontstyle, int reserved)
+{
+    int character_spacing = 1 * fontsize;
+    int text_length = strlen(text);
 
-// }
+    if (x_lup < 0 ||
+        y_lup < 0 ||
+        x_lup + (text_length)*(FONT_5X7_WIDTH + character_spacing) - character_spacing - 1 > X_MAX ||
+        y_lup + (FONT_5X7_HEIGHT - 1) > Y_MAX
+    )
+    return ERR_OUT_OF_BOUNDS;
+
+
+    if (text == NULL ||
+        fontname == NULL ||
+        color < 0 ||
+        color > 0xFF ||
+        fontsize < 1 ||
+        fontsize > 2 
+        )
+        return ERR_INVALID_VALUE;
+
+
+    int cursor_x = x_lup;
+
+    for (int i = 0; text[i] != '\0'; i++)
+    {
+        if (text[i] == ' ')
+        {
+            cursor_x += (FONT_5X7_WIDTH + character_spacing) * fontsize;
+            continue;
+        }
+
+        int character_index;
+
+        if (text[i] >= 'A' && text[i] <= 'Z')
+            character_index = text[i] - 'A';
+        else if (text[i] >= 'a' && text[i] <= 'z')
+            character_index = text[i] - 'a';
+        else if (text[i] >= '0' && text[i] <= '9')
+            character_index = 26 + (text[i] - '0');
+        else
+            character_index = FONT_5X7_CHAR_COUNT - 1;
+
+        for (int row = 0; row < FONT_5X7_HEIGHT; row++)
+        {
+            for (int column = 0; column < FONT_5X7_WIDTH; column++)
+            {
+                if (font_5x7[character_index][row] & (1 << (FONT_5X7_WIDTH - 1 - column)))
+                {
+                    for (int scale_y = 0; scale_y < fontsize; scale_y++)
+                    {
+                        for (int scale_x = 0; scale_x < fontsize; scale_x++)
+                        {
+                            int xp = cursor_x + (column * fontsize) + scale_x;
+                            int yp = y_lup + (row * fontsize) + scale_y;
+
+                            if (xp >= 0 && xp <= X_MAX &&
+                                yp >= 0 && yp <= Y_MAX
+                                )
+                                UB_VGA_SetPixel(xp, yp, (uint8_t)color);
+                        }
+                    }
+                }
+            }
+        }
+
+        cursor_x += (FONT_5X7_WIDTH + character_spacing) * fontsize;
+    }
+
+    return TASK_SUCCES;
+}
 
 
 /**
@@ -39,12 +123,14 @@ int API_draw_line(int x_1, int y_1, int x_2, int y_2, int color, int weight, int
         x_1 > X_MAX ||
         y_1 > Y_MAX ||
         x_2 > X_MAX ||
-        y_2 > Y_MAX)
+        y_2 > Y_MAX
+        )
         return ERR_OUT_OF_BOUNDS;
         
     if (color  < 0    ||
         color  > 0xFF ||
-        weight < 0)
+        weight < 0
+        )
         return ERR_INVALID_VALUE;
 
     // Calculates absolute distance between coördinates
@@ -69,7 +155,8 @@ int API_draw_line(int x_1, int y_1, int x_2, int y_2, int color, int weight, int
             {
                 // Check if pixels are within bounds
                 if ((x_1 + i >= 0 && x_1 + i <= X_MAX) &&
-                    (y_1 + j >= 0 && y_1 + j <= Y_MAX))
+                    (y_1 + j >= 0 && y_1 + j <= Y_MAX)
+                    )
                     UB_VGA_SetPixel(x_1 + i, y_1 + j, color);
             }
         }
@@ -115,13 +202,15 @@ int API_draw_rectangle(int x, int y, int width, int height, int color, int fille
     if (x           < 0     ||
         y           < 0     ||
         x + width   > X_MAX ||
-        y + height  > Y_MAX)
+        y + height  > Y_MAX
+        )
         return ERR_OUT_OF_BOUNDS;
 
     if (color  < 0      ||
         color  > 0xFF   ||
         filled < 0      ||
-        filled > 1)
+        filled > 1
+        )
         return ERR_INVALID_VALUE;
 
 
@@ -138,7 +227,8 @@ int API_draw_rectangle(int x, int y, int width, int height, int color, int fille
             else
             {
                 if (xp == 0 || xp == width - 1 ||
-                    yp == 0 || yp == height - 1)
+                    yp == 0 || yp == height - 1
+                    )
                     UB_VGA_SetPixel(x + xp, y + yp, (uint8_t)color);
             }
         }
@@ -166,7 +256,8 @@ int API_clearscreen(int color)
 {
     // Error handling
     if (color < 0 ||
-        color > 0xFF)
+        color > 0xFF
+        )
         return ERR_INVALID_VALUE;
 
     UB_VGA_FillScreen((uint8_t)color);
