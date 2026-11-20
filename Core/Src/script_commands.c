@@ -118,6 +118,12 @@ int API_draw_rectangle(int x, int y, int width, int height, int color, int fille
         y + height  > Y_MAX)
         return ERR_OUT_OF_BOUNDS;
 
+    if (color  < 0      ||
+        color  > 0xFF   ||
+        filled < 0      ||
+        filled > 1)
+        return ERR_INVALID_VALUE;
+
 
     // Check every pixel of the rectangle
     for (int yp = 0; yp < height; yp++)
@@ -138,7 +144,7 @@ int API_draw_rectangle(int x, int y, int width, int height, int color, int fille
         }
     }
 
-    return 0;
+    return TASK_SUCCES;
 }
 
 
@@ -150,10 +156,23 @@ int API_draw_rectangle(int x, int y, int width, int height, int color, int fille
 
 
 
-// int API_clearscreen(int color)
-// {
+/**
+ * @brief  This function fills the screen with one color.
+ *
+ * @param color Color used to clear the screen
+ * @return int error
+ */
+int API_clearscreen(int color)
+{
+    // Error handling
+    if (color < 0 ||
+        color > 0xFF)
+        return ERR_INVALID_VALUE;
 
-// }
+    UB_VGA_FillScreen((uint8_t)color);
+
+    return TASK_SUCCES;
+}
 
 
 ///////////////////////////////////////////////////////////////////////
