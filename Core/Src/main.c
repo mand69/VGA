@@ -23,6 +23,15 @@ int main(void)
 
 	UB_VGA_FillScreen(VGA_COL_BLUE);
 
+  UB_VGA_SetPixel(100, 100, VGA_COL_RED);
+
+  for (int j = 0; j < 60; j++) {
+    for (int i = 0; i < 60; i++) {
+      UB_VGA_SetPixel(i, j, VGA_COL_GREEN);
+    }
+  }
+  
+
   while(1)
   {
 
