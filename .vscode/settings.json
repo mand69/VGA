@@ -5,5 +5,6 @@
         "main.h": "c",
         "cmath": "c"
     },
-    "cortex-debug.variableUseNaturalFormat": true
+    "cortex-debug.variableUseNaturalFormat": true,
+    "C_Cpp.default.compilerPath": "/Applications/ArmGNUToolchain/13.3.rel1/arm-none-eabi/bin/arm-none-eabi-gcc"
 }
