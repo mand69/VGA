@@ -1,8 +1,0 @@
-../Core/Src/script_commands.c:4:5:API_draw_text	24	static
-../Core/Src/script_commands.c:10:5:API_draw_line	64	static
-../Core/Src/script_commands.c:62:5:API_draw_bitmap	24	static
-../Core/Src/script_commands.c:69:5:API_clearscreen	16	static
-../Core/Src/script_commands.c:81:5:API_wait	16	static
-../Core/Src/script_commands.c:88:5:API_repeat_commands	24	static
-../Core/Src/script_commands.c:95:5:API_draw_circle	24	static
-../Core/Src/script_commands.c:102:5:API_draw_figure	24	static
