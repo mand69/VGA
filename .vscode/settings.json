@@ -1,9 +1,0 @@
-{
-    "files.associations": {
-        "compare": "c",
-        "type_traits": "c",
-        "main.h": "c",
-        "cmath": "c"
-    },
-    "cortex-debug.variableUseNaturalFormat": true
-}
