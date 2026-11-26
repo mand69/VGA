@@ -1,31 +1,148 @@
 #include "stm32_ub_vga_screen.h"
+#include "font_5x7.h"
+#include "font_3x5.h"
+#include "font_6x8.h"
 #include <stdlib.h>
+#include <string.h>
 
-#define X_RESOLUTION 640-1
-#define Y_RESOLUTION 480-1
+#define X_MAX 320-1
+#define Y_MAX 240-1
 
 // Error states
 enum ERR_STATES{
     TASK_SUCCES = 0,
     ERR_OUT_OF_BOUNDS = 1,
+    ERR_INVALID_VALUE = 2
 };
 
-// int API_draw_text(int x_lup, int y_lup, int color, char *text, char *fontname, int fontsize, int fontstyle, int reserved) // fontsize:1 small, 2 big
-// {
+/**
+ * @brief  This function draws text using a bitmap font.
+ *
+ * @param x_lup Left position of the text
+ * @param y_lup Top position of the text
+ * @param color Text color
+ * @param text Text to draw; lowercase is converted to uppercase
+ * @param fontname Font name ("3x5", "5x7", or "6x8")
+ * @param fontsize 1 for normal size, 2 for double size
+ * @param fontstyle Reserved; 0 for normal style
+ * @param reserved Reserved parameter
+ * @return int error
+ */
+int API_draw_text(int x_lup, int y_lup, int color, char *text, char *fontname,
+                  int fontsize, int fontstyle, int reserved)
+{
+    if (text == NULL ||
+        fontname == NULL ||
+        color < 0 ||
+        color > 0xFF ||
+        fontsize < 1 ||
+        fontsize > 2 
+        )
+        return ERR_INVALID_VALUE;
 
-// }
+    int font_width;
+    int font_height;
+    int char_count;
+    const uint8_t *font;
+
+    if (strcmp(fontname, "3x5") == 0)
+    {
+        font_width = FONT_3X5_WIDTH;
+        font_height = FONT_3X5_HEIGHT;
+        char_count = FONT_3X5_CHAR_COUNT;
+        font = &font_3x5[0][0];
+    }
+    else if (strcmp(fontname, "6x8") == 0)
+    {
+        font_width = FONT_6X8_WIDTH;
+        font_height = FONT_6X8_HEIGHT;
+        char_count = FONT_6X8_CHAR_COUNT;
+        font = &font_6x8[0][0];
+    }
+    else if (strcmp(fontname, "5x7") == 0)
+    {
+        font_width = FONT_5X7_WIDTH;
+        font_height = FONT_5X7_HEIGHT;
+        char_count = FONT_5X7_CHAR_COUNT;
+        font = &font_5x7[0][0];
+    }
+    else
+    {
+        return ERR_INVALID_VALUE;
+    }
+
+    int character_spacing = 1 * fontsize;
+    int text_length = strlen(text);
+
+    if (x_lup < 0 ||
+        y_lup < 0 ||
+        x_lup + (text_length)*(font_width + character_spacing) - character_spacing - 1 > X_MAX ||
+        y_lup + (font_height * fontsize) - 1 > Y_MAX
+    )
+        return ERR_OUT_OF_BOUNDS;
+
+    int cursor_x = x_lup;
+
+    for (int i = 0; text[i] != '\0'; i++)
+    {
+        if (text[i] == ' ')
+        {
+            cursor_x += (font_width + character_spacing) * fontsize;
+            continue;
+        }
+
+        int character_index;
+
+        if (text[i] >= 'A' && text[i] <= 'Z')
+            character_index = text[i] - 'A';
+        else if (text[i] >= 'a' && text[i] <= 'z')
+            character_index = text[i] - 'a';
+        else if (text[i] >= '0' && text[i] <= '9')
+            character_index = 26 + (text[i] - '0');
+        else
+            character_index = char_count - 1;
+
+        for (int row = 0; row < font_height; row++)
+        {
+            for (int column = 0; column < font_width; column++)
+            {
+                if (font[character_index * font_height + row] & (1 << (font_width - 1 - column)))
+                {
+                    for (int scale_y = 0; scale_y < fontsize; scale_y++)
+                    {
+                        for (int scale_x = 0; scale_x < fontsize; scale_x++)
+                        {
+                            int xp = cursor_x + (column * fontsize) + scale_x;
+                            int yp = y_lup + (row * fontsize) + scale_y;
+
+                            if (xp >= 0 && xp <= X_MAX &&
+                                yp >= 0 && yp <= Y_MAX
+                                )
+                                UB_VGA_SetPixel(xp, yp, (uint8_t)color);
+                        }
+                    }
+                }
+            }
+        }
+
+        cursor_x += (font_width + character_spacing) * fontsize;
+    }
+
+    return TASK_SUCCES;
+}
+
 
 /**
- * @brief  This function draws a line between 2 coördinates. 
+ * @brief  This function draws a line on the screen.
  * 
- * @param x_1 X-pos coördinate 1
- * @param y_1 Y-pos coördinate 1
- * @param x_2 X-pos coördinate 2
- * @param y_2 Y-pos coördinate 2
+ * @param x_1 X-pos coördinate of the first point
+ * @param y_1 Y-pos coördinate of the first point
+ * @param x_2 X-pos coördinate of the second point
+ * @param y_2 Y-pos coördinate of the second point
  * @param color Color of the line
  * @param weight Thickness of the line
- * @param reserved 
- * @return int 
+ * @param reserved Reserved parameter
+ * @return int error
  */
 int API_draw_line(int x_1, int y_1, int x_2, int y_2, int color, int weight, int reserved)
 {
@@ -34,11 +151,18 @@ int API_draw_line(int x_1, int y_1, int x_2, int y_2, int color, int weight, int
         y_1 < 0 ||
         x_2 < 0 ||
         y_2 < 0 ||
-        x_1 > X_RESOLUTION ||
-        y_1 > Y_RESOLUTION ||
-        x_2 > X_RESOLUTION ||
-        y_2 > Y_RESOLUTION)
+        x_1 > X_MAX ||
+        y_1 > Y_MAX ||
+        x_2 > X_MAX ||
+        y_2 > Y_MAX
+        )
         return ERR_OUT_OF_BOUNDS;
+        
+    if (color  < 0    ||
+        color  > 0xFF ||
+        weight < 0
+        )
+        return ERR_INVALID_VALUE;
 
     // Calculates absolute distance between coördinates
     int dx = abs((int)x_2 - (int)x_1);
@@ -53,19 +177,26 @@ int API_draw_line(int x_1, int y_1, int x_2, int y_2, int color, int weight, int
     // Calculating and setting pixels
     while (1)
     {
-        // Teken de pixel rondom het huidige punt
+        // Draw pixel and thickness
         int offset = weight / 2;
 
         for (int i = -offset; i <= offset; i++)
         {
             for (int j = -offset; j <= offset; j++)
-                UB_VGA_SetPixel(x_1 + i, y_1 + j, color);
+            {
+                // Check if pixels are within bounds
+                if ((x_1 + i >= 0 && x_1 + i <= X_MAX) &&
+                    (y_1 + j >= 0 && y_1 + j <= Y_MAX)
+                    )
+                    UB_VGA_SetPixel(x_1 + i, y_1 + j, color);
+            }
         }
 
         // Line completed?
         if (x_1 == x_2 && y_1 == y_2)
             return TASK_SUCCES;
 
+        // Bresenham's line algorithm
         int e2 = 2 * err;
 
         if (e2 > -dy)
@@ -83,11 +214,59 @@ int API_draw_line(int x_1, int y_1, int x_2, int y_2, int color, int weight, int
 }
 
 
+/**
+ * @brief  This function draws a rectangle on the screen.
+ *  * 
+ * @param x X-pos coördinate of the top-left corner
+ * @param y Y-pos coördinate of the top-left corner
+ * @param width Width of the rectangle
+ * @param height Height of the rectangle
+ * @param color Color of the rectangle
+ * @param filled Fill status of the rectangle
+ * @param reserved1 Reserved parameter
+ * @param reserved2 Reserved parameter
+ * @return int 
+ */
+int API_draw_rectangle(int x, int y, int width, int height, int color, int filled, int reserved1, int reserved2) // e.g.: weight, bordercolor
+{
+    // Error handling
+    if (x           < 0     ||
+        y           < 0     ||
+        x + width   > X_MAX ||
+        y + height  > Y_MAX
+        )
+        return ERR_OUT_OF_BOUNDS;
 
-// int API_draw_rectangle(int x, int y, int width, int height, int color, int filled, int reserved, int reserved) // e.g.: weight, bordercolor
-// {
+    if (color  < 0      ||
+        color  > 0xFF   ||
+        filled < 0      ||
+        filled > 1
+        )
+        return ERR_INVALID_VALUE;
 
-// }
+
+    // Check every pixel of the rectangle
+    for (int yp = 0; yp < height; yp++)
+    {
+        for (int xp = 0; xp < width; xp++)
+        {
+            // Filled
+            if (filled == 1)
+                UB_VGA_SetPixel(x + xp, y + yp, (uint8_t)color);
+
+            // Not filled
+            else
+            {
+                if (xp == 0 || xp == width - 1 ||
+                    yp == 0 || yp == height - 1
+                    )
+                    UB_VGA_SetPixel(x + xp, y + yp, (uint8_t)color);
+            }
+        }
+    }
+
+    return TASK_SUCCES;
+}
 
 
 
@@ -98,10 +277,24 @@ int API_draw_line(int x_1, int y_1, int x_2, int y_2, int color, int weight, int
 
 
 
-// int API_clearscreen(int color)
-// {
+/**
+ * @brief  This function fills the screen with one color.
+ *
+ * @param color Color used to clear the screen
+ * @return int error
+ */
+int API_clearscreen(int color)
+{
+    // Error handling
+    if (color < 0 ||
+        color > 0xFF
+        )
+        return ERR_INVALID_VALUE;
 
-// }
+    UB_VGA_FillScreen((uint8_t)color);
+
+    return TASK_SUCCES;
+}
 
 
 ///////////////////////////////////////////////////////////////////////
