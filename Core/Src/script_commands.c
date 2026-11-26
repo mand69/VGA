@@ -1,5 +1,7 @@
 #include "stm32_ub_vga_screen.h"
 #include "font_5x7.h"
+#include "font_3x5.h"
+#include "font_6x8.h"
 #include <stdlib.h>
 #include <string.h>
 
@@ -14,13 +16,13 @@ enum ERR_STATES{
 };
 
 /**
- * @brief  This function draws text using the 5x7 bitmap font.
+ * @brief  This function draws text using a bitmap font.
  *
  * @param x_lup Left position of the text
  * @param y_lup Top position of the text
  * @param color Text color
  * @param text Text to draw; lowercase is converted to uppercase
- * @param fontname Font name (currently "5x7")
+ * @param fontname Font name ("3x5", "5x7", or "6x8")
  * @param fontsize 1 for normal size, 2 for double size
  * @param fontstyle Reserved; 0 for normal style
  * @param reserved Reserved parameter
@@ -29,17 +31,6 @@ enum ERR_STATES{
 int API_draw_text(int x_lup, int y_lup, int color, char *text, char *fontname,
                   int fontsize, int fontstyle, int reserved)
 {
-    int character_spacing = 1 * fontsize;
-    int text_length = strlen(text);
-
-    if (x_lup < 0 ||
-        y_lup < 0 ||
-        x_lup + (text_length)*(FONT_5X7_WIDTH + character_spacing) - character_spacing - 1 > X_MAX ||
-        y_lup + (FONT_5X7_HEIGHT - 1) > Y_MAX
-    )
-    return ERR_OUT_OF_BOUNDS;
-
-
     if (text == NULL ||
         fontname == NULL ||
         color < 0 ||
@@ -49,6 +40,46 @@ int API_draw_text(int x_lup, int y_lup, int color, char *text, char *fontname,
         )
         return ERR_INVALID_VALUE;
 
+    int font_width;
+    int font_height;
+    int char_count;
+    const uint8_t *font;
+
+    if (strcmp(fontname, "3x5") == 0)
+    {
+        font_width = FONT_3X5_WIDTH;
+        font_height = FONT_3X5_HEIGHT;
+        char_count = FONT_3X5_CHAR_COUNT;
+        font = &font_3x5[0][0];
+    }
+    else if (strcmp(fontname, "6x8") == 0)
+    {
+        font_width = FONT_6X8_WIDTH;
+        font_height = FONT_6X8_HEIGHT;
+        char_count = FONT_6X8_CHAR_COUNT;
+        font = &font_6x8[0][0];
+    }
+    else if (strcmp(fontname, "5x7") == 0)
+    {
+        font_width = FONT_5X7_WIDTH;
+        font_height = FONT_5X7_HEIGHT;
+        char_count = FONT_5X7_CHAR_COUNT;
+        font = &font_5x7[0][0];
+    }
+    else
+    {
+        return ERR_INVALID_VALUE;
+    }
+
+    int character_spacing = 1 * fontsize;
+    int text_length = strlen(text);
+
+    if (x_lup < 0 ||
+        y_lup < 0 ||
+        x_lup + (text_length)*(font_width + character_spacing) - character_spacing - 1 > X_MAX ||
+        y_lup + (font_height * fontsize) - 1 > Y_MAX
+    )
+        return ERR_OUT_OF_BOUNDS;
 
     int cursor_x = x_lup;
 
@@ -56,7 +87,7 @@ int API_draw_text(int x_lup, int y_lup, int color, char *text, char *fontname,
     {
         if (text[i] == ' ')
         {
-            cursor_x += (FONT_5X7_WIDTH + character_spacing) * fontsize;
+            cursor_x += (font_width + character_spacing) * fontsize;
             continue;
         }
 
@@ -69,13 +100,13 @@ int API_draw_text(int x_lup, int y_lup, int color, char *text, char *fontname,
         else if (text[i] >= '0' && text[i] <= '9')
             character_index = 26 + (text[i] - '0');
         else
-            character_index = FONT_5X7_CHAR_COUNT - 1;
+            character_index = char_count - 1;
 
-        for (int row = 0; row < FONT_5X7_HEIGHT; row++)
+        for (int row = 0; row < font_height; row++)
         {
-            for (int column = 0; column < FONT_5X7_WIDTH; column++)
+            for (int column = 0; column < font_width; column++)
             {
-                if (font_5x7[character_index][row] & (1 << (FONT_5X7_WIDTH - 1 - column)))
+                if (font[character_index * font_height + row] & (1 << (font_width - 1 - column)))
                 {
                     for (int scale_y = 0; scale_y < fontsize; scale_y++)
                     {
@@ -94,7 +125,7 @@ int API_draw_text(int x_lup, int y_lup, int color, char *text, char *fontname,
             }
         }
 
-        cursor_x += (FONT_5X7_WIDTH + character_spacing) * fontsize;
+        cursor_x += (font_width + character_spacing) * fontsize;
     }
 
     return TASK_SUCCES;
