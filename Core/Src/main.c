@@ -12,6 +12,7 @@
 
 #include "main.h"
 #include "stm32_ub_vga_screen.h"
+#include "script_commands.h"
 #include <math.h>
 
 
@@ -22,16 +23,9 @@ int main(void)
 	UB_VGA_Screen_Init(); // Init VGA-Screen
 
 	UB_VGA_FillScreen(VGA_COL_BLUE);
-
   UB_VGA_SetPixel(100, 100, VGA_COL_RED);
 
-  for (int j = 0; j < 60; j++) {
-    for (int i = 0; i < 60; i++) {
-      UB_VGA_SetPixel(i, j, VGA_COL_GREEN);
-    }
-  }
-  
-
+  API_draw_text(10, 10, VGA_COL_WHITE, "Hello World", "5x7", 1, 0, 0);
   while(1)
   {
 
